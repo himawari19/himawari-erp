@@ -187,25 +187,7 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                     <div className="md:col-span-1">
                         <div className="rounded-xl border bg-white shadow-sm p-6 sticky top-6">
                             <h3 className="text-lg font-bold mb-4">Create New Product</h3>
-                            <form action={addProduct} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                                    <input name="name" required placeholder="e.g. Indomie Goreng" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">SKU Code</label>
-                                    <input name="sku" required placeholder="IDM-001" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price (IDR)</label>
-                                    <input name="sell_price" type="number" required placeholder="3500" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" />
-                                </div>
-                                <div className="pt-2">
-                                    <SubmitButton className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-sm font-medium">
-                                        Create Product
-                                    </SubmitButton>
-                                </div>
-                            </form>
+                            <CreateProductForm />
                         </div>
                     </div>
                 </div>
