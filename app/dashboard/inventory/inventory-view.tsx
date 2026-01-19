@@ -227,9 +227,7 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
         </div>
     );
 }
-        </div >
-    );
-}
+
 
 function StockInForm({ products, warehouses, isAdmin, userWarehouseId }: { products: InventoryViewProps['products'], warehouses: InventoryViewProps['warehouses'], isAdmin: boolean, userWarehouseId?: string }) {
     const [quantity, setQuantity] = useState<string>("");
