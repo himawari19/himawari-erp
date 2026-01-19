@@ -332,3 +332,56 @@ function StockInForm({ products, warehouses, isAdmin, userWarehouseId }: { produ
         </form>
     );
 }
+
+function CreateProductForm() {
+    const [sellPrice, setSellPrice] = useState<string>("");
+
+    // Format Number with Dots (1.000)
+    const formatNumber = (value: string) => {
+        return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
+    const handleSellPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSellPrice(formatNumber(e.target.value));
+    };
+
+    const handleSubmit = (formData: FormData) => {
+        formData.set("sell_price", sellPrice.replace(/\./g, ""));
+        return addProduct(formData);
+    };
+
+    return (
+        <form action={handleSubmit} className="space-y-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                <input name="name" required placeholder="e.g. Indomie Goreng" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SKU Code</label>
+                <input name="sku" required placeholder="IDM-001" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price (IDR)</label>
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 sm:text-sm">Rp</span>
+                    </div>
+                    <input
+                        name="sell_price_display"
+                        type="text"
+                        value={sellPrice}
+                        onChange={handleSellPriceChange}
+                        required
+                        placeholder="0"
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 pl-10 bg-gray-50"
+                    />
+                </div>
+            </div>
+            <div className="pt-2">
+                <SubmitButton className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-sm font-medium">
+                    Create Product
+                </SubmitButton>
+            </div>
+        </form>
+    );
+}
