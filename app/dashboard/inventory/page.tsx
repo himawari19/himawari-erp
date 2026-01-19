@@ -45,7 +45,7 @@ export default async function InventoryPage() {
             products={products}
             warehouses={warehouses}
             inventory={inventory as any}
-            isAdmin={isAdmin}
+            role={profile?.role || "kasir"}
             userWarehouseId={profile?.warehouse_id}
         />
     );

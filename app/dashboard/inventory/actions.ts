@@ -33,3 +33,38 @@ export async function addProduct(formData: FormData) {
     });
     revalidatePath("/dashboard/inventory");
 }
+
+export async function deleteStock(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("inventory_batches").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/dashboard/inventory");
+}
+
+export async function updateStock(id: string, quantity: number, buy_price: number) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("inventory_batches").update({
+        quantity_remaining: quantity,
+        buy_price: buy_price
+    }).eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/dashboard/inventory");
+}
+
+export async function deleteProduct(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/dashboard/inventory");
+}
+
+export async function updateProduct(id: string, name: string, sku: string, sell_price: number) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("products").update({
+        name,
+        sku,
+        sell_price
+    }).eq("id", id);
+    if (error) throw new Error(error.message);
+    revalidatePath("/dashboard/inventory");
+}

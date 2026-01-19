@@ -3,6 +3,8 @@ import { Sidebar } from "./sidebar";
 import { getProfile } from "@/utils/supabase/server";
 import { Toaster } from "sonner"; // Using sonner for toasts
 
+import { UserRole } from "@/lib/types";
+
 export default async function DashboardLayout({
     children,
 }: {
@@ -12,7 +14,7 @@ export default async function DashboardLayout({
 
     return (
         <div className="flex min-h-screen w-full bg-slate-50/50">
-            <Sidebar role={profile?.role || "kasir"} />
+            <Sidebar role={(profile?.role as UserRole) || "kasir"} />
             <main className="flex flex-1 flex-col sm:pl-64 transition-all duration-300">
                 <div className="p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
                     {children}

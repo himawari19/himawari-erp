@@ -18,7 +18,7 @@ export default async function Home() {
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
             <LayoutDashboard className="h-6 w-6 text-indigo-600" />
-            <span>Himawari ERP</span>
+            <span>Management Stock & POS</span>
           </div>
           <nav className="hidden gap-6 md:flex">
             <Link className="text-sm font-medium hover:text-indigo-600 transition-colors" href="#">Features</Link>
@@ -100,7 +100,7 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t font-light text-xs text-gray-500">
-        <p>© 2024 Himawari ERP. All rights reserved.</p>
+        <p>© 2026 Management Stock & POS. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link className="hover:underline underline-offset-4" href="#">Terms of Service</Link>
           <Link className="hover:underline underline-offset-4" href="#">Privacy</Link>
