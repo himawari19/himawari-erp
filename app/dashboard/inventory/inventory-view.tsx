@@ -90,15 +90,15 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                 </div>
             </div>
 
-            {/* TAB CONTENT: STOCK HISTORY (OVERVIEW) */}
-            {activeTab === "overview" && (
+            {/* TAB CONTENT: TOTAL STOCK (ALL WAREHOUSES) */}
+            {activeTab === "total_stock" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold">Inventory Batches</h2>
+                        <h2 className="text-lg font-semibold">Total Stock Overview</h2>
                         <div className="flex gap-2">
                             <div className="relative">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-                                <input type="text" placeholder="Search stock..." className="pl-9 h-9 w-64 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                                <input type="text" placeholder="Search product..." className="pl-9 h-9 w-64 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                             </div>
                         </div>
                     </div>
@@ -106,44 +106,122 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50/50 border-b">
                                 <tr>
-                                    <th className="h-10 px-6 align-middle font-medium text-gray-500">Date</th>
-                                    <th className="h-10 px-6 align-middle font-medium text-gray-500">Product</th>
-                                    <th className="h-10 px-6 align-middle font-medium text-gray-500">Warehouse</th>
-                                    <th className="h-10 px-6 align-middle font-medium text-gray-500 text-right">Buy Price</th>
-                                    <th className="h-10 px-6 align-middle font-medium text-gray-500 text-center">Remaining</th>
+                                    <th className="h-10 px-6 align-middle font-medium text-gray-500">Product Name</th>
+                                    <th className="h-10 px-6 align-middle font-medium text-gray-500">SKU</th>
+                                    <th className="h-10 px-6 align-middle font-medium text-gray-500 text-center">Total Quantity</th>
+                                    <th className="h-10 px-6 align-middle font-medium text-gray-500 text-right">Est. Valuation</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {inventory?.map((item) => (
-                                    <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors">
-                                        <td className="p-6 align-middle text-gray-600">{new Date(item.received_at).toLocaleDateString("id-ID")}</td>
-                                        <td className="p-6 align-middle font-medium text-gray-900">
-                                            {(item.product as any)?.name}
-                                            <span className="ml-2 text-xs text-gray-400 font-normal">{(item.product as any)?.sku}</span>
-                                        </td>
-                                        <td className="p-6 align-middle text-gray-600">{(item.warehouse as any)?.name}</td>
-                                        <td className="p-6 align-middle text-right font-mono">Rp {item.buy_price.toLocaleString("id-ID")}</td>
-                                        <td className="p-6 align-middle text-center">
-                                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.quantity_remaining > 5 ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'}`}>
-                                                {item.quantity_remaining} units
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {!inventory?.length && (
-                                    <tr>
-                                        <td colSpan={5} className="p-8 text-center text-gray-500">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Boxes className="h-8 w-8 text-gray-300" />
-                                                <p>No inventory records found.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
+                                {(() => {
+                                    // Aggregate stock by product_id
+                                    const stockMap = new Map<string, { name: string; sku: string; totalQty: number; totalValuation: number }>();
+
+                                    inventory?.forEach(item => {
+                                        const productId = (item as any).product_id || (item.product as any)?.id; // Safety check in case of join structure
+                                        // Since we get 'product' object from relation, we rely on product name/sku from there
+                                        const pName = (item.product as any)?.name || "Unknown Product";
+                                        const pSku = (item.product as any)?.sku || "-";
+                                        // Create unique key based on product name/sku if ID is elusive, but better to use name if that's what we have
+                                        const key = pName + pSku;
+
+                                        const existing = stockMap.get(key) || { name: pName, sku: pSku, totalQty: 0, totalValuation: 0 };
+
+                                        existing.totalQty += item.quantity_remaining;
+                                        existing.totalValuation += (item.quantity_remaining * item.buy_price);
+
+                                        stockMap.set(key, existing);
+                                    });
+
+                                    const aggregatedStock = Array.from(stockMap.values());
+
+                                    if (aggregatedStock.length === 0) {
+                                        return (
+                                            <tr>
+                                                <td colSpan={4} className="p-8 text-center text-gray-500">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Boxes className="h-8 w-8 text-gray-300" />
+                                                        <p>No stock data available.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+
+                                    return aggregatedStock.map((item, idx) => (
+                                        <tr key={idx} className="group hover:bg-gray-50/50 transition-colors">
+                                            <td className="p-6 align-middle font-medium text-gray-900">{item.name}</td>
+                                            <td className="p-6 align-middle text-gray-500 font-mono text-xs">{item.sku}</td>
+                                            <td className="p-6 align-middle text-center">
+                                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.totalQty > 10 ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20' : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20'}`}>
+                                                    {item.totalQty} units
+                                                </span>
+                                            </td>
+                                            <td className="p-6 align-middle text-right font-mono text-gray-600">
+                                                Rp {item.totalValuation.toLocaleString("id-ID")}
+                                            </td>
+                                        </tr>
+                                    ));
+                                })()}
                             </tbody>
                         </table>
                     </div>
                 </div>
+            )}
+
+
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold">Inventory Batches</h2>
+                    <div className="flex gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+                            <input type="text" placeholder="Search stock..." className="pl-9 h-9 w-64 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    </div>
+                </div>
+                <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50/50 border-b">
+                            <tr>
+                                <th className="h-10 px-6 align-middle font-medium text-gray-500">Date</th>
+                                <th className="h-10 px-6 align-middle font-medium text-gray-500">Product</th>
+                                <th className="h-10 px-6 align-middle font-medium text-gray-500">Warehouse</th>
+                                <th className="h-10 px-6 align-middle font-medium text-gray-500 text-right">Buy Price</th>
+                                <th className="h-10 px-6 align-middle font-medium text-gray-500 text-center">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {inventory?.map((item) => (
+                                <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors">
+                                    <td className="p-6 align-middle text-gray-600">{new Date(item.received_at).toLocaleDateString("id-ID")}</td>
+                                    <td className="p-6 align-middle font-medium text-gray-900">
+                                        {(item.product as any)?.name}
+                                        <span className="ml-2 text-xs text-gray-400 font-normal">{(item.product as any)?.sku}</span>
+                                    </td>
+                                    <td className="p-6 align-middle text-gray-600">{(item.warehouse as any)?.name}</td>
+                                    <td className="p-6 align-middle text-right font-mono">Rp {item.buy_price.toLocaleString("id-ID")}</td>
+                                    <td className="p-6 align-middle text-center">
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.quantity_remaining > 5 ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'}`}>
+                                            {item.quantity_remaining} units
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                            {!inventory?.length && (
+                                <tr>
+                                    <td colSpan={5} className="p-8 text-center text-gray-500">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Boxes className="h-8 w-8 text-gray-300" />
+                                            <p>No inventory records found.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             )}
 
             {/* TAB CONTENT: MASTER PRODUCTS (ADMIN ONLY) */}

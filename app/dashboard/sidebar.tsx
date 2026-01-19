@@ -42,6 +42,7 @@ export function Sidebar({ role }: SidebarProps) {
             icon: Package,
             roles: ["superadmin", "gudang"],
             subItems: [
+                { label: "Total Stock", href: "/dashboard/inventory?tab=total_stock", tab: "total_stock" },
                 { label: "Stock History", href: "/dashboard/inventory?tab=overview", tab: "overview" },
                 { label: "Master Products", href: "/dashboard/inventory?tab=products", tab: "products", roles: ["superadmin"] },
                 { label: "Incoming Stock", href: "/dashboard/inventory?tab=stock_in", tab: "stock_in" },
@@ -108,10 +109,10 @@ export function Sidebar({ role }: SidebarProps) {
                                                 key={subItem.href}
                                                 href={subItem.href}
                                                 className={cn(
-                                                    "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                                    "rounded-md px-3 py-2 text-sm transition-all duration-200",
                                                     isSubActive
-                                                        ? "bg-indigo-500/10 text-indigo-400"
-                                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                                                        ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-900/50"
+                                                        : "font-medium text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                                                 )}
                                             >
                                                 {subItem.label}
