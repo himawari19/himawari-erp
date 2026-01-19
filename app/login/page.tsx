@@ -3,11 +3,14 @@ import { login } from "@/app/login/actions"
 import { SubmitButton } from "./submit-button"
 import { AlertCircle } from "lucide-react"
 
-export default function LoginPage({
+export default async function LoginPage({
     searchParams,
 }: {
-    searchParams: { error?: string }
+    searchParams: Promise<{ error?: string }>
 }) {
+    const params = await searchParams;
+    const errorMessage = params?.error;
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
             <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-2xl">
@@ -16,7 +19,7 @@ export default function LoginPage({
                     <p className="mt-2 text-sm text-gray-600">Access your dashboard</p>
                 </div>
 
-                {searchParams?.error && (
+                {errorMessage && (
                     <div className="rounded-md bg-red-50 p-4 border border-red-200">
                         <div className="flex">
                             <div className="flex-shrink-0">
@@ -25,7 +28,7 @@ export default function LoginPage({
                             <div className="ml-3">
                                 <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
                                 <div className="mt-2 text-sm text-red-700">
-                                    <p>{searchParams.error}</p>
+                                    <p>{errorMessage}</p>
                                 </div>
                             </div>
                         </div>
