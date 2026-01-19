@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Package, History, Boxes, Search, Filter } from "lucide-react";
-import { SubmitButton } from "@/app/login/submit-button"; // Reusing the submit button
+import { SubmitButton } from "@/app/login/submit-button";
 import { addProduct, addStock } from "./actions";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 // Types
 type Product = { id: string; name: string; sku: string; sell_price: number };
@@ -26,7 +27,17 @@ interface InventoryViewProps {
 }
 
 export function InventoryView({ products, warehouses, inventory, isAdmin, userWarehouseId }: InventoryViewProps) {
-    const [activeTab, setActiveTab] = useState<"overview" | "products" | "stock_in">("overview");
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const activeTab = searchParams.get("tab") || "overview";
+
+    const setActiveTab = (tab: string) => {
+        const params = new URLSearchParams(searchParams);
+        params.set("tab", tab);
+        router.replace(`${pathname}?${params.toString()}`);
+    };
 
     return (
         <div className="space-y-6">
@@ -36,13 +47,13 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">Inventory Management</h1>
                     <p className="text-sm text-gray-500 mt-1">Manage products, stock levels, and warehouse operations.</p>
                 </div>
-                {/* Tab Pill Navigation */}
-                <div className="flex p-1 bg-gray-100 rounded-lg self-start">
+                {/* Tab Pill Navigation - kept for mobile or if sidebar is collapsed, but primary nav is now intended to be sidebar */}
+                <div className="hidden sm:flex p-1 bg-gray-100 rounded-lg self-start">
                     <button
                         onClick={() => setActiveTab("overview")}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "overview"
-                                ? "bg-white text-indigo-600 shadow-sm"
-                                : "text-gray-500 hover:text-gray-700"
+                            ? "bg-white text-indigo-600 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700"
                             }`}
                     >
                         <div className="flex items-center gap-2">
@@ -54,8 +65,8 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                         <button
                             onClick={() => setActiveTab("products")}
                             className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "products"
-                                    ? "bg-white text-indigo-600 shadow-sm"
-                                    : "text-gray-500 hover:text-gray-700"
+                                ? "bg-white text-indigo-600 shadow-sm"
+                                : "text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             <div className="flex items-center gap-2">
@@ -67,8 +78,8 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                     <button
                         onClick={() => setActiveTab("stock_in")}
                         className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "stock_in"
-                                ? "bg-white text-indigo-600 shadow-sm"
-                                : "text-gray-500 hover:text-gray-700"
+                            ? "bg-white text-indigo-600 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700"
                             }`}
                     >
                         <div className="flex items-center gap-2">

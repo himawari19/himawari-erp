@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { LayoutDashboard, ShoppingCart, Package, LogOut, ChevronRight } from "lucide-react";
 import { signOut } from "@/app/dashboard/actions";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,16 @@ interface SidebarProps {
 
 export function Sidebar({ role }: SidebarProps) {
     const pathname = usePathname();
+
+    const links = [
+    const [expandedLinks, setExpandedLinks] = useState<string[]>([]);
+    const searchParams = useSearchParams();
+
+    const toggleLink = (label: string) => {
+        setExpandedLinks((prev) =>
+            prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+        );
+    };
 
     const links = [
         {
@@ -31,6 +42,11 @@ export function Sidebar({ role }: SidebarProps) {
             label: "Inventory",
             icon: Package,
             roles: ["superadmin", "gudang"],
+            subItems: [
+                { label: "Stock History", href: "/dashboard/inventory?tab=overview", tab: "overview" },
+                { label: "Master Products", href: "/dashboard/inventory?tab=products", tab: "products", roles: ["superadmin"] },
+                { label: "Incoming Stock", href: "/dashboard/inventory?tab=stock_in", tab: "stock_in" },
+            ]
         }
     ];
 
@@ -42,27 +58,70 @@ export function Sidebar({ role }: SidebarProps) {
                 </span>
             </div>
 
-            <nav className="flex flex-col gap-2 px-3 py-6 flex-1">
+            <nav className="flex flex-col gap-2 px-3 py-6 flex-1 overflow-y-auto">
                 {links.map((link) => {
                     if (!link.roles.includes(role)) return null;
 
-                    const isActive = pathname === link.href;
+                    const isActive = pathname === link.href || (link.subItems && pathname.startsWith(link.href));
+                    const isExpanded = expandedLinks.includes(link.label);
+                    const hasSubItems = link.subItems && link.subItems.length > 0;
 
                     return (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            className={cn(
-                                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
-                                isActive
-                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                        <div key={link.label}>
+                            <Link
+                                href={hasSubItems ? "#" : link.href}
+                                onClick={(e) => {
+                                    if (hasSubItems) {
+                                        e.preventDefault();
+                                        toggleLink(link.label);
+                                    }
+                                }}
+                                className={cn(
+                                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
+                                    isActive && !hasSubItems
+                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                                        : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                )}
+                            >
+                                <link.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-400")} />
+                                <span className="flex-1">{link.label}</span>
+                                {hasSubItems && (
+                                    <ChevronRight
+                                        className={cn(
+                                            "h-4 w-4 transition-transform duration-200",
+                                            isExpanded ? "rotate-90" : ""
+                                        )}
+                                    />
+                                )}
+                            </Link>
+
+                            {/* Submenu */}
+                            {hasSubItems && isExpanded && (
+                                <div className="mt-1 ml-4 flex flex-col gap-1 border-l border-slate-800 pl-3 animate-in slide-in-from-left-2 fade-in duration-200">
+                                    {link.subItems.map((subItem) => {
+                                        if (subItem.roles && !subItem.roles.includes(role)) return null;
+
+                                        const currentTab = searchParams.get("tab") || "overview";
+                                        const isSubActive = pathname === link.href && currentTab === subItem.tab;
+
+                                        return (
+                                            <Link
+                                                key={subItem.href}
+                                                href={subItem.href}
+                                                className={cn(
+                                                    "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                                    isSubActive
+                                                        ? "bg-indigo-500/10 text-indigo-400"
+                                                        : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                                                )}
+                                            >
+                                                {subItem.label}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
                             )}
-                        >
-                            <link.icon className={cn("h-5 w-5 transition-transform group-hover:scale-110", isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-400")} />
-                            {link.label}
-                            {isActive && <ChevronRight className="ml-auto h-4 w-4 animate-in fade-in slide-in-from-left-1" />}
-                        </Link>
+                        </div>
                     );
                 })}
             </nav>
