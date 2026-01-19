@@ -220,66 +220,137 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                             <p className="text-sm text-gray-500">Record new stock arrival at warehouse.</p>
                         </div>
 
-                        <form action={addStock} className="space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Product</label>
-                                    <select name="product_id" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 bg-gray-50">
-                                        {products?.map((p) => (
-                                            <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Destination Warehouse</label>
-                                    {isAdmin ? (
-                                        <select name="warehouse_id" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 bg-gray-50">
-                                            {warehouses?.map((w) => (
-                                                <option key={w.id} value={w.id}>{w.name}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <>
-                                            <input type="hidden" name="warehouse_id" value={userWarehouseId || ''} />
-                                            <div className="block w-full rounded-lg border-gray-300 bg-gray-100 p-2.5 text-gray-500 text-sm border">
-                                                Your Assigned Warehouse
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                <div className="col-span-2 sm:col-span-1">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity Received</label>
-                                    <div className="relative">
-                                        <input name="quantity" type="number" required min="1" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 pl-4 bg-gray-50" placeholder="0" />
-                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                            <span className="text-gray-500 sm:text-sm">pcs</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Buy Price per Unit (IDR)</label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span className="text-gray-500 sm:text-sm">Rp</span>
-                                        </div>
-                                        <input name="buy_price" type="number" required min="0" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 pl-10 bg-gray-50" placeholder="0" />
-                                    </div>
-                                    <p className="mt-1 text-xs text-gray-500">Cost price for calculating profit later.</p>
-                                </div>
-                            </div>
-
-                            <div className="pt-4 border-t">
-                                <SubmitButton className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg text-sm font-semibold shadow-md shadow-indigo-200">
-                                    Confirm Stock Arrival
-                                </SubmitButton>
-                            </div>
-                        </form>
+                        <StockInForm products={products} warehouses={warehouses} isAdmin={isAdmin} userWarehouseId={userWarehouseId} />
                     </div>
                 </div>
             )}
         </div>
+    );
+}
+
+function StockInForm({ products, warehouses, isAdmin, userWarehouseId }: { products: InventoryViewProps['products'], warehouses: InventoryViewProps['warehouses'], isAdmin: boolean, userWarehouseId?: string }) {
+    const [quantity, setQuantity] = useState<string>("");
+    const [totalPrice, setTotalPrice] = useState<string>("");
+    const [unitPrice, setUnitPrice] = useState<number>(0);
+
+    // Auto-calculate Unit Price
+    useEffect(() => {
+        const qty = parseInt(quantity.replace(/\./g, "") || "0");
+        const total = parseInt(totalPrice.replace(/\./g, "") || "0");
+
+        if (qty > 0 && total > 0) {
+            setUnitPrice(Math.round(total / qty));
+        } else {
+            setUnitPrice(0);
+        }
+    }, [quantity, totalPrice]);
+
+    // Format Number with Dots (1.000)
+    const formatNumber = (value: string) => {
+        return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
+    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setQuantity(formatNumber(e.target.value));
+    };
+
+    const handleTotalPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTotalPrice(formatNumber(e.target.value));
+    };
+
+    // Clean data before submit
+    const handleSubmit = (formData: FormData) => {
+        formData.set("quantity", quantity.replace(/\./g, ""));
+        // We still need to send 'buy_price' (unit price) to the server action
+        formData.set("buy_price", unitPrice.toString());
+        return addStock(formData);
+    };
+
+    return (
+        <form action={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+                <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Product</label>
+                    <select name="product_id" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 bg-gray-50">
+                        {products?.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Destination Warehouse</label>
+                    {isAdmin ? (
+                        <select name="warehouse_id" className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 bg-gray-50">
+                            {warehouses?.map((w) => (
+                                <option key={w.id} value={w.id}>{w.name}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <>
+                            <input type="hidden" name="warehouse_id" value={userWarehouseId || ''} />
+                            <div className="block w-full rounded-lg border-gray-300 bg-gray-100 p-2.5 text-gray-500 text-sm border">
+                                Your Assigned Warehouse
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity Received</label>
+                    <div className="relative">
+                        <input
+                            name="quantity_display"
+                            type="text"
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            required
+                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 pl-4 bg-gray-50"
+                            placeholder="0"
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 sm:text-sm">pcs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Purchase Price (IDR)</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 sm:text-sm">Rp</span>
+                        </div>
+                        <input
+                            name="total_price_display"
+                            type="text"
+                            value={totalPrice}
+                            onChange={handleTotalPriceChange}
+                            required
+                            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2.5 pl-10 bg-gray-50"
+                            placeholder="0"
+                        />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Total modal yang dikeluarkan untuk stok ini.</p>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Calculated Unit Price</label>
+                    <div className="block w-full rounded-lg border-gray-300 bg-gray-100 p-2.5 pl-4 text-gray-700 sm:text-sm border font-mono">
+                        Rp {unitPrice.toLocaleString("id-ID")} / pc
+                    </div>
+                </div>
+            </div>
+
+            <div className="pt-4 border-t">
+                <SubmitButton className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg text-sm font-semibold shadow-md shadow-indigo-200">
+                    Confirm Stock Arrival
+                </SubmitButton>
+            </div>
+        </form>
+                    </div >
+                </div >
+            )
+}
+        </div >
     );
 }
