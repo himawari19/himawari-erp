@@ -5,6 +5,7 @@ import { Plus, Package, History, Boxes, Search, Filter } from "lucide-react";
 import { SubmitButton } from "@/app/login/submit-button";
 import { addProduct, addStock } from "./actions";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 // Types
 type Product = { id: string; name: string; sku: string; sell_price: number };
@@ -320,11 +321,26 @@ function StockInForm({ products, warehouses, isAdmin, userWarehouseId }: { produ
     };
 
     // Clean data before submit
-    const handleSubmit = (formData: FormData) => {
-        formData.set("quantity", quantity.replace(/\./g, ""));
-        // We still need to send 'buy_price' (unit price) to the server action
-        formData.set("buy_price", unitPrice.toString());
-        return addStock(formData);
+    const handleSubmit = async (formData: FormData) => {
+        const promise = new Promise(async (resolve, reject) => {
+            try {
+                formData.set("quantity", quantity.replace(/\./g, ""));
+                formData.set("buy_price", unitPrice.toString());
+                await addStock(formData);
+                setQuantity("");
+                setTotalPrice("");
+                setUnitPrice(0);
+                resolve("Stock added successfully");
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+        toast.promise(promise, {
+            loading: 'Adding stock...',
+            success: 'Stock has been added successfully! 📦',
+            error: 'Failed to add stock. Please try again.',
+        });
     };
 
     return (
@@ -423,9 +439,24 @@ function CreateProductForm() {
         setSellPrice(formatNumber(e.target.value));
     };
 
-    const handleSubmit = (formData: FormData) => {
-        formData.set("sell_price", sellPrice.replace(/\./g, ""));
-        return addProduct(formData);
+    const handleSubmit = async (formData: FormData) => {
+        const promise = new Promise(async (resolve, reject) => {
+            try {
+                formData.set("sell_price", sellPrice.replace(/\./g, ""));
+                await addProduct(formData);
+                setSellPrice("");
+                // Reset other fields by form reset if possible or just let it reload
+                resolve("Product created");
+            } catch (error) {
+                reject(error);
+            }
+        });
+
+        toast.promise(promise, {
+            loading: 'Creating product...',
+            success: 'Product created successfully! ✨',
+            error: 'Failed to create product.',
+        });
     };
 
     return (
