@@ -1,7 +1,13 @@
 
 import { login } from "@/app/login/actions"
+import { SubmitButton } from "./submit-button"
+import { AlertCircle } from "lucide-react"
 
-export default function LoginPage() {
+export default function LoginPage({
+    searchParams,
+}: {
+    searchParams: { error?: string }
+}) {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
             <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-10 shadow-2xl">
@@ -9,6 +15,23 @@ export default function LoginPage() {
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to ERP</h2>
                     <p className="mt-2 text-sm text-gray-600">Access your dashboard</p>
                 </div>
+
+                {searchParams?.error && (
+                    <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                        <div className="flex">
+                            <div className="flex-shrink-0">
+                                <AlertCircle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-sm font-medium text-red-800">Login Failed</h3>
+                                <div className="mt-2 text-sm text-red-700">
+                                    <p>{searchParams.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <form className="mt-8 space-y-6">
                     <div className="-space-y-px rounded-md shadow-sm">
                         <div>
@@ -38,12 +61,12 @@ export default function LoginPage() {
                     </div>
 
                     <div>
-                        <button
+                        <SubmitButton
                             formAction={login}
                             className="group relative flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                         >
                             Sign in
-                        </button>
+                        </SubmitButton>
                     </div>
                 </form>
             </div>
