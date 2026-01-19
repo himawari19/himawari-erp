@@ -116,13 +116,13 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                             <tbody className="divide-y divide-gray-100">
                                 {inventory?.map((item) => (
                                     <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors">
-                                        <td className="p-6 align-middle text-gray-600">{new Date(item.created_at).toLocaleDateString()}</td>
+                                        <td className="p-6 align-middle text-gray-600">{new Date(item.created_at).toLocaleDateString("id-ID")}</td>
                                         <td className="p-6 align-middle font-medium text-gray-900">
                                             {(item.product as any)?.name}
                                             <span className="ml-2 text-xs text-gray-400 font-normal">{(item.product as any)?.sku}</span>
                                         </td>
                                         <td className="p-6 align-middle text-gray-600">{(item.warehouse as any)?.name}</td>
-                                        <td className="p-6 align-middle text-right font-mono">Rp {item.buy_price.toLocaleString()}</td>
+                                        <td className="p-6 align-middle text-right font-mono">Rp {item.buy_price.toLocaleString("id-ID")}</td>
                                         <td className="p-6 align-middle text-center">
                                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${item.quantity_remaining > 5 ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20' : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'}`}>
                                                 {item.quantity_remaining} units
@@ -174,7 +174,7 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                                                 </td>
                                                 <td className="p-4 align-middle font-medium text-gray-900">{p.name}</td>
                                                 <td className="p-4 align-middle text-gray-500 font-mono text-xs">{p.sku}</td>
-                                                <td className="p-4 align-middle text-gray-700">Rp {p.sell_price.toLocaleString()}</td>
+                                                <td className="p-4 align-middle text-gray-700">Rp {p.sell_price.toLocaleString("id-ID")}</td>
                                             </tr>
                                         ))}
                                     </tbody>
