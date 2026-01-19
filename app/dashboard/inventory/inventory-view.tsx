@@ -13,7 +13,7 @@ type InventoryItem = {
     id: string;
     quantity_remaining: number;
     buy_price: number;
-    created_at: string;
+    received_at: string;
     warehouse: { name: string };
     product: { name: string; sku: string };
 };
@@ -116,7 +116,7 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                             <tbody className="divide-y divide-gray-100">
                                 {inventory?.map((item) => (
                                     <tr key={item.id} className="group hover:bg-gray-50/50 transition-colors">
-                                        <td className="p-6 align-middle text-gray-600">{new Date(item.created_at).toLocaleDateString("id-ID")}</td>
+                                        <td className="p-6 align-middle text-gray-600">{new Date(item.received_at).toLocaleDateString("id-ID")}</td>
                                         <td className="p-6 align-middle font-medium text-gray-900">
                                             {(item.product as any)?.name}
                                             <span className="ml-2 text-xs text-gray-400 font-normal">{(item.product as any)?.sku}</span>

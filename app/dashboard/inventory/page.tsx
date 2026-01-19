@@ -23,11 +23,11 @@ export default async function InventoryPage() {
             id,
             quantity_remaining,
             buy_price,
-            created_at,
+            received_at,
             warehouse:warehouses(name),
             product:products(name, sku)
         `)
-        .order("created_at", { ascending: false });
+        .order("received_at", { ascending: false });
 
     // Fetch Products (for master list & dropdown)
     const { data: products } = await supabase
