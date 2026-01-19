@@ -220,11 +220,17 @@ export function InventoryView({ products, warehouses, inventory, isAdmin, userWa
                             <p className="text-sm text-gray-500">Record new stock arrival at warehouse.</p>
                         </div>
 
-                        <StockInForm products={products} warehouses={warehouses} isAdmin={isAdmin} userWarehouseId={userWarehouseId} />
-                    </div>
+                        <div className="pt-4 border-t">
+                            <SubmitButton className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg text-sm font-semibold shadow-md shadow-indigo-200">
+                                Confirm Stock Arrival
+                            </SubmitButton>
+                        </div>
+                    </form>
                 </div>
-            )}
-        </div>
+                </div>
+    )
+}
+        </div >
     );
 }
 
@@ -347,10 +353,5 @@ function StockInForm({ products, warehouses, isAdmin, userWarehouseId }: { produ
                 </SubmitButton>
             </div>
         </form>
-                    </div >
-                </div >
-            )
-}
-        </div >
     );
 }

@@ -14,7 +14,6 @@ interface SidebarProps {
 export function Sidebar({ role }: SidebarProps) {
     const pathname = usePathname();
 
-    const links = [
     const [expandedLinks, setExpandedLinks] = useState<string[]>([]);
     const searchParams = useSearchParams();
 
