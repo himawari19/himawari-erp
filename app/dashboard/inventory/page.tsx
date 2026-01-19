@@ -1,4 +1,3 @@
-```typescript
 import { createClient } from "@/utils/supabase/server";
 import { InventoryView } from "./inventory-view";
 
@@ -21,13 +20,13 @@ export default async function InventoryPage() {
     const { data: inventory } = await supabase
         .from("inventory_batches")
         .select(`
-id,
-    quantity_remaining,
-    buy_price,
-    created_at,
-    warehouse: warehouses(name),
-        product: products(name, sku)
-            `)
+            id,
+            quantity_remaining,
+            buy_price,
+            created_at,
+            warehouse:warehouses(name),
+            product:products(name, sku)
+        `)
         .order("created_at", { ascending: false });
 
     // Fetch Products (for master list & dropdown)
@@ -51,4 +50,3 @@ id,
         />
     );
 }
-```
