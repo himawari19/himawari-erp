@@ -44,7 +44,7 @@ export default async function InventoryPage() {
         <InventoryView
             products={products}
             warehouses={warehouses}
-            inventory={inventory}
+            inventory={inventory as any}
             isAdmin={isAdmin}
             userWarehouseId={profile?.warehouse_id}
         />
