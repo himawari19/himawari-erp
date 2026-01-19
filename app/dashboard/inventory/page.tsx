@@ -94,122 +94,119 @@ export default async function InventoryPage() {
                         <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800">Create Product</button>
                     </form>
                 </div>
-                </div>
-    )
-}
-
-{/* Product List (Master Data) - Only visible to Admin */ }
-{
-    isAdmin && (
-        <div className="p-6 bg-white rounded-xl shadow border">
-            <h3 className="text-lg font-medium mb-4">Master Data Products</h3>
-            <div className="relative w-full overflow-auto max-h-60">
-                <table className="w-full caption-bottom text-sm text-left">
-                    <thead className="[&_tr]:border-b sticky top-0 bg-white">
-                        <tr className="border-b transition-colors data-[state=selected]:bg-muted">
-                            <th className="h-10 px-4 align-middle font-medium text-muted-foreground w-[100px]">Active</th>
-                            <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Name</th>
-                            <th className="h-10 px-4 align-middle font-medium text-muted-foreground">SKU</th>
-                            <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Sell Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products?.map((p) => (
-                            <tr key={p.id} className="border-b transition-colors hover:bg-muted/50">
-                                <td className="p-4 align-middle"><span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Active</span></td>
-                                <td className="p-4 align-middle font-medium">{p.name}</td>
-                                <td className="p-4 align-middle">{p.sku}</td>
-                                <td className="p-4 align-middle">Rp {p.sell_price.toLocaleString()}</td>
-                            </tr>
-                        ))}
-                        {!products?.length && (
-                            <tr>
-                                <td colSpan={4} className="p-4 text-center text-muted-foreground">No products found.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    )
-}
-
-{/* Add Stock Form */ }
-<div className="p-6 bg-white rounded-xl shadow border">
-    <h3 className="text-lg font-medium mb-4">Incoming Stock</h3>
-    <form action={addStock} className="flex flex-wrap gap-4 items-end">
-        <div className="w-full sm:w-auto">
-            <label className="block text-sm font-medium text-gray-700">Product</label>
-            <select name="product_id" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
-                {products?.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                ))}
-            </select>
-        </div>
-
-        <div className="w-full sm:w-auto">
-            <label className="block text-sm font-medium text-gray-700">Warehouse</label>
-            {/* If admin, select warehouse. If not, hidden input with own warehouse */}
-            {isAdmin ? (
-                <select name="warehouse_id" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
-                    {warehouses?.map((w) => (
-                        <option key={w.id} value={w.id}>{w.name}</option>
-                    ))}
-                </select>
-            ) : (
-                <>
-                    <input type="hidden" name="warehouse_id" value={profile?.warehouse_id || ''} />
-                    <div className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm border p-2 bg-gray-100">
-                        Your Warehouse
-                    </div>
-                </>
             )}
-        </div>
 
-        <div className="w-full sm:w-auto">
-            <label className="block text-sm font-medium text-gray-700">Quantity</label>
-            <input name="quantity" type="number" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
-        </div>
-        <div className="w-full sm:w-auto">
-            <label className="block text-sm font-medium text-gray-700">Buy Price (IDR)</label>
-            <input name="buy_price" type="number" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="e.g. 31000" />
-        </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add Stock</button>
-    </form>
-</div>
+            {/* Product List (Master Data) - Only visible to Admin */}
+            {isAdmin && (
+                <div className="p-6 bg-white rounded-xl shadow border">
+                    <h3 className="text-lg font-medium mb-4">Master Data Products</h3>
+                    <div className="relative w-full overflow-auto max-h-60">
+                        <table className="w-full caption-bottom text-sm text-left">
+                            <thead className="[&_tr]:border-b sticky top-0 bg-white">
+                                <tr className="border-b transition-colors data-[state=selected]:bg-muted">
+                                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground w-[100px]">Active</th>
+                                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Name</th>
+                                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">SKU</th>
+                                    <th className="h-10 px-4 align-middle font-medium text-muted-foreground">Sell Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products?.map((p) => (
+                                    <tr key={p.id} className="border-b transition-colors hover:bg-muted/50">
+                                        <td className="p-4 align-middle"><span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Active</span></td>
+                                        <td className="p-4 align-middle font-medium">{p.name}</td>
+                                        <td className="p-4 align-middle">{p.sku}</td>
+                                        <td className="p-4 align-middle">Rp {p.sell_price.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                                {!products?.length && (
+                                    <tr>
+                                        <td colSpan={4} className="p-4 text-center text-muted-foreground">No products found.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )
+            }
 
-{/* Inventory List */ }
-<div className="rounded-md border bg-white">
-    <div className="relative w-full overflow-auto">
-        <table className="w-full caption-bottom text-sm text-left">
-            <thead className="[&_tr]:border-b">
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                    <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Date</th>
-                    <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Product</th>
-                    <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Warehouse</th>
-                    <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Buy Price</th>
-                    <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Qty Remaining</th>
-                </tr>
-            </thead>
-            <tbody className="[&_tr:last-child]:border-0">
-                {inventory?.map((item) => (
-                    <tr key={item.id} className="border-b transition-colors hover:bg-muted/50">
-                        <td className="p-4 align-middle">{new Date(item.created_at).toLocaleDateString()}</td>
-                        <td className="p-4 align-middle font-medium">{(item.product as any)?.name} ({(item.product as any)?.sku})</td>
-                        <td className="p-4 align-middle">{(item.warehouse as any)?.name}</td>
-                        <td className="p-4 align-middle">Rp {item.buy_price.toLocaleString()}</td>
-                        <td className="p-4 align-middle">{item.quantity_remaining}</td>
-                    </tr>
-                ))}
-                {!inventory?.length && (
-                    <tr>
-                        <td colSpan={5} className="p-4 text-center text-muted-foreground">No inventory records found.</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
-    </div>
-</div>
+            {/* Add Stock Form */}
+            <div className="p-6 bg-white rounded-xl shadow border">
+                <h3 className="text-lg font-medium mb-4">Incoming Stock</h3>
+                <form action={addStock} className="flex flex-wrap gap-4 items-end">
+                    <div className="w-full sm:w-auto">
+                        <label className="block text-sm font-medium text-gray-700">Product</label>
+                        <select name="product_id" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                            {products?.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="w-full sm:w-auto">
+                        <label className="block text-sm font-medium text-gray-700">Warehouse</label>
+                        {/* If admin, select warehouse. If not, hidden input with own warehouse */}
+                        {isAdmin ? (
+                            <select name="warehouse_id" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white">
+                                {warehouses?.map((w) => (
+                                    <option key={w.id} value={w.id}>{w.name}</option>
+                                ))}
+                            </select>
+                        ) : (
+                            <>
+                                <input type="hidden" name="warehouse_id" value={profile?.warehouse_id || ''} />
+                                <div className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm border p-2 bg-gray-100">
+                                    Your Warehouse
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="w-full sm:w-auto">
+                        <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                        <input name="quantity" type="number" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+                    </div>
+                    <div className="w-full sm:w-auto">
+                        <label className="block text-sm font-medium text-gray-700">Buy Price (IDR)</label>
+                        <input name="buy_price" type="number" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="e.g. 31000" />
+                    </div>
+                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add Stock</button>
+                </form>
+            </div>
+
+            {/* Inventory List */}
+            <div className="rounded-md border bg-white">
+                <div className="relative w-full overflow-auto">
+                    <table className="w-full caption-bottom text-sm text-left">
+                        <thead className="[&_tr]:border-b">
+                            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Date</th>
+                                <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Product</th>
+                                <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Warehouse</th>
+                                <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Buy Price</th>
+                                <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Qty Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody className="[&_tr:last-child]:border-0">
+                            {inventory?.map((item) => (
+                                <tr key={item.id} className="border-b transition-colors hover:bg-muted/50">
+                                    <td className="p-4 align-middle">{new Date(item.created_at).toLocaleDateString()}</td>
+                                    <td className="p-4 align-middle font-medium">{(item.product as any)?.name} ({(item.product as any)?.sku})</td>
+                                    <td className="p-4 align-middle">{(item.warehouse as any)?.name}</td>
+                                    <td className="p-4 align-middle">Rp {item.buy_price.toLocaleString()}</td>
+                                    <td className="p-4 align-middle">{item.quantity_remaining}</td>
+                                </tr>
+                            ))}
+                            {!inventory?.length && (
+                                <tr>
+                                    <td colSpan={5} className="p-4 text-center text-muted-foreground">No inventory records found.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div >
     );
 }
