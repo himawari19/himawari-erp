@@ -22,9 +22,8 @@ export default async function DashboardPage() {
                         <h3 className="font-semibold leading-none tracking-tight">Role</h3>
                     </div>
                     <div className="p-0 pt-4">
-                        <div className="text-2xl font-bold capitalize">{profile?.role || 'No Role Found'}</div>
-                        <p className="text-xs text-muted-foreground">User ID: {user?.id}</p>
-                        <p className="text-xs text-red-500">{!profile && 'Profile data is null'}</p>
+                        <div className="text-2xl font-bold capitalize">{profile?.role}</div>
+                        <p className="text-xs text-muted-foreground">Your account permission level</p>
                     </div>
                 </div>
 
