@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingCart, Package, History } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, History, ArrowLeftRight, ClipboardCheck, Tags, Truck, Boxes, FileText, Users } from "lucide-react";
 import { NavigationItem } from "@/lib/types";
 
 export const NAVIGATION_LINKS: NavigationItem[] = [
@@ -28,8 +28,38 @@ export const NAVIGATION_LINKS: NavigationItem[] = [
         subItems: [
             { label: "Stock Amount", href: "/dashboard/inventory?tab=total_stock", tab: "total_stock" },
             { label: "Stock History", href: "/dashboard/inventory?tab=overview", tab: "overview" },
-            { label: "Master Products", href: "/dashboard/inventory?tab=products", tab: "products", roles: ["superadmin"] },
             { label: "Incoming Stock", href: "/dashboard/inventory?tab=stock_in", tab: "stock_in" },
+            { label: "Stock Transfer", href: "/dashboard/inventory?tab=transfer", tab: "transfer" },
         ]
+    },
+    {
+        href: "/dashboard/inventory?tab=opname",
+        label: "Stock Opname",
+        icon: ClipboardCheck,
+        roles: ["superadmin", "gudang"],
+    },
+    {
+        href: "/dashboard/master",
+        label: "Master Data",
+        icon: Boxes,
+        roles: ["superadmin"],
+        subItems: [
+            { label: "Products", href: "/dashboard/inventory?tab=products", tab: "products" },
+            { label: "Categories", href: "/dashboard/inventory?tab=categories", tab: "categories" },
+            { label: "Suppliers", href: "/dashboard/inventory?tab=suppliers", tab: "suppliers" },
+            { label: "Customers", href: "/dashboard/master/customers", tab: "customers" },
+        ]
+    },
+    {
+        href: "/dashboard/reports",
+        label: "Reports",
+        icon: FileText,
+        roles: ["superadmin", "gudang"],
+    },
+    {
+        href: "/dashboard/users",
+        label: "Users",
+        icon: Users,
+        roles: ["superadmin"],
     }
 ];

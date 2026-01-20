@@ -35,6 +35,18 @@ export default async function InventoryPage() {
         .select("*")
         .order("name", { ascending: true });
 
+    // Fetch Categories
+    const { data: categories } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true });
+
+    // Fetch Suppliers
+    const { data: suppliers } = await supabase
+        .from("suppliers")
+        .select("*")
+        .order("name", { ascending: true });
+
     // Fetch Warehouses
     const { data: warehouses } = await supabase
         .from("warehouses")
@@ -44,6 +56,8 @@ export default async function InventoryPage() {
         <InventoryView
             products={products}
             warehouses={warehouses}
+            categories={categories as any}
+            suppliers={suppliers as any}
             inventory={inventory as any}
             role={profile?.role || "kasir"}
             userWarehouseId={profile?.warehouse_id}

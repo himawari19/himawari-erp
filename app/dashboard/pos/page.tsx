@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { checkout } from "@/app/dashboard/pos/actions"; // Assuming this exists from previous context
-import { Loader2, Search, ShoppingCart, Trash2, Plus, Minus, Package } from "lucide-react";
-import { toast } from "sonner"; // Assuming sonner is installed as seen in inventory-view
+import { checkout } from "@/app/dashboard/pos/actions";
+import { getCustomers } from "../master/customers/actions";
+import { Loader2, Search, ShoppingCart, Trash2, Plus, Minus, Package, User } from "lucide-react";
+import { toast } from "sonner";
+import { SearchableDropdown } from "@/components/ui/searchable-dropdown";
 
 type Product = {
     id: string;
@@ -18,8 +20,15 @@ type CartItem = Product & {
     quantity: number;
 };
 
+type Customer = {
+    id: string;
+    name: string;
+};
+
 export default function POSPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [selectedCustomer, setSelectedCustomer] = useState<string>("");
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
@@ -34,21 +43,27 @@ export default function POSPage() {
     const supabase = createClient();
 
     useEffect(() => {
-        async function fetchProducts() {
-            const { data, error } = await supabase
-                .from("products")
-                .select("id, name, sku, sell_price, image_url")
-                .order('name');
+        async function fetchInitialData() {
+            try {
+                const [productsData, customersData] = await Promise.all([
+                    supabase
+                        .from("products")
+                        .select("id, name, sku, sell_price, image_url")
+                        .order('name')
+                        .then(({ data, error }) => { if (error) throw error; return data; }),
+                    getCustomers()
+                ]);
 
-            if (error) {
-                console.error("Error fetching products:", error);
-                toast.error("Failed to load products");
+                if (productsData) setProducts(productsData);
+                if (customersData) setCustomers(customersData);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast.error("Failed to load POS data");
+            } finally {
+                setLoading(false);
             }
-
-            if (data) setProducts(data);
-            setLoading(false);
         }
-        fetchProducts();
+        fetchInitialData();
     }, []);
 
     const addToCart = (product: Product) => {
@@ -88,9 +103,10 @@ export default function POSPage() {
         setProcessing(true);
 
         try {
-            const result = await checkout(cart);
+            const result = await checkout(cart, selectedCustomer || null);
             if (result.success) {
                 setCart([]);
+                setSelectedCustomer(""); // Reset customer
                 toast.success("Transaction completed successfully!");
             } else {
                 toast.error(result.error || "Checkout failed");
@@ -195,8 +211,17 @@ export default function POSPage() {
                             </p>
                         </div>
                     </div>
-                    {/* Decorative element */}
-                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                </div>
+
+                {/* Customer Selector */}
+                <div className="px-6 pt-4 pb-2 border-b border-gray-100">
+                    <label className="text-xs font-semibold text-gray-500 mb-1.5 block uppercase tracking-wider">Customer</label>
+                    <SearchableDropdown
+                        items={customers}
+                        value={selectedCustomer}
+                        onChange={setSelectedCustomer}
+                        placeholder="Guest Customer (Anonymous)"
+                    />
                 </div>
 
                 {/* Cart Items List */}
@@ -205,7 +230,7 @@ export default function POSPage() {
                         <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4 opacity-60">
                             <ShoppingCart className="w-16 h-16" />
                             <p className="font-medium">Cart is empty</p>
-                            <p className="text-sm text-center px-10 text-gray-400">Scan items or click on products to add them to the order</p>
+                            <p className="text-sm text-center px-10 text-gray-400">Select a customer above and scan items to start</p>
                         </div>
                     ) : (
                         <div className="space-y-1 p-2 pb-20">
@@ -263,10 +288,6 @@ export default function POSPage() {
                         <div className="flex justify-between text-gray-500 text-sm">
                             <span>Subtotal</span>
                             <span>Rp {total.toLocaleString("id-ID")}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-500 text-sm">
-                            <span>Tax (0%)</span>
-                            <span>Rp 0</span>
                         </div>
                         <div className="flex justify-between items-end pt-3 border-t border-dashed">
                             <span className="text-lg font-bold text-gray-900">Total Payment</span>

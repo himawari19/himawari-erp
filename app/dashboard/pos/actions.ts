@@ -11,7 +11,7 @@ type CartItemCheck = {
     quantity: number;
 };
 
-export async function checkout(cart: CartItemCheck[]) {
+export async function checkout(cart: CartItemCheck[], customer_id: string | null = null) {
     try {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
@@ -35,6 +35,7 @@ export async function checkout(cart: CartItemCheck[]) {
             .insert({
                 user_id: user.id,
                 warehouse_id: profile.warehouse_id,
+                customer_id: customer_id, // Add customer link
                 total_amount: totalAmount,
                 status: 'completed'
             })
@@ -55,7 +56,7 @@ export async function checkout(cart: CartItemCheck[]) {
                 .eq("product_id", item.id)
                 .eq("warehouse_id", profile.warehouse_id)
                 .gt("quantity_remaining", 0)
-                .order("created_at", { ascending: true });
+                .order("received_at", { ascending: true });
 
             if (!batches || batches.length === 0) {
                 throw new Error(`Out of stock for ${item.name}`);

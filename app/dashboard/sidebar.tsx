@@ -67,7 +67,7 @@ export function Sidebar({ role }: SidebarProps) {
                 </div>
 
                 {/* Navigation Links */}
-                <nav className="flex flex-col gap-1.5 px-3 py-6 flex-1 overflow-y-auto">
+                <nav className="flex flex-col gap-1.5 px-3 py-6 flex-1 overflow-y-auto custom-scrollbar">
                     {NAVIGATION_LINKS.map((link) => (
                         <SidebarLinkGroup
                             key={link.label}
