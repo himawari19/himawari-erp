@@ -46,28 +46,15 @@ export default async function DashboardPage() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-    // Fetch Inventory for Low Stock Alerts
-    const { data: inventoryBatches } = await supabase
-        .from('inventory_batches')
-        .select('quantity_remaining, buy_price, product:products(id, name, sku, low_stock_threshold)');
+    // Fetch Low Stock Alerts using Database RPC (Optimized)
+    const { data: lowStockItemsData, error: alertError } = await supabase
+        .rpc('get_low_stock_alerts', { p_warehouse_id: profile?.warehouse_id || null });
 
-    // Aggregate Stock for Alerts
-    const stockMap = new Map<string, { name: string, sku: string, total: number, threshold: number }>();
-    inventoryBatches?.forEach((batch: any) => {
-        const p = batch.product as any;
-        if (!p) return;
-        const key = p.sku;
-        const existing = stockMap.get(key) || {
-            name: p.name,
-            sku: p.sku,
-            total: 0,
-            threshold: p.low_stock_threshold || 10
-        };
-        existing.total += batch.quantity_remaining;
-        stockMap.set(key, existing);
-    });
+    if (alertError) {
+        console.error("Error fetching low stock alerts:", alertError);
+    }
 
-    const lowStockItems = Array.from(stockMap.values()).filter(item => item.total <= item.threshold);
+    const lowStockItems = (lowStockItemsData as any[]) || [];
 
 
     return (
@@ -173,8 +160,8 @@ export default async function DashboardPage() {
                                             <p className="text-[10px] text-gray-400 font-mono uppercase">{item.sku}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className={`text-sm font-bold ${item.total === 0 ? 'text-red-600' : 'text-amber-600'}`}>
-                                                {item.total} Units
+                                            <p className={`text-sm font-bold ${item.total_stock === 0 ? 'text-red-600' : 'text-amber-600'}`}>
+                                                {item.total_stock} Units
                                             </p>
                                             <p className="text-[10px] text-gray-400">Limit: {item.threshold}</p>
                                         </div>
