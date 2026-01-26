@@ -17,13 +17,28 @@ export async function addStock(formData: FormData) {
     const quantity = parseInt(formData.get("quantity") as string);
     const buy_price = parseFloat(formData.get("buy_price") as string);
 
-    await supabase.from("inventory_batches").insert({
+    const { data: batch } = await supabase.from("inventory_batches").insert({
         product_id,
         warehouse_id,
         quantity_remaining: quantity,
         original_quantity: quantity,
         buy_price,
-    });
+    }).select().single();
+
+    // Audit Log: Stok Masuk
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && batch) {
+        await supabase.from("stock_movements").insert({
+            product_id,
+            warehouse_id,
+            type: 'in',
+            quantity: quantity,
+            reference_id: batch.id,
+            user_id: user.id,
+            notes: 'Penerimaan stok baru'
+        });
+    }
+
     revalidatePath("/dashboard/inventory");
 }
 
@@ -138,18 +153,36 @@ export async function transferStock(formData: FormData) {
         remainingToTransfer -= take;
     }
 
-    // 3. Log the transfer
-    const { error: logError } = await supabase
-        .from("stock_transfers")
-        .insert({
-            product_id: productId,
-            from_warehouse_id: fromWarehouseId,
-            to_warehouse_id: toWarehouseId,
-            quantity: quantity,
-            user_id: user.id
-        });
+    // 3. Log the transfer (Business Logic Log)
+    const { data: transferRecord } = await supabase
+        .from("stock_movements") // Use stock_movements as the primary record for transfers too
+        .insert([
+            {
+                product_id: productId,
+                warehouse_id: fromWarehouseId,
+                type: 'transfer_out',
+                quantity: quantity,
+                user_id: user.id,
+                notes: `Transfer ke gudang tujuan`
+            },
+            {
+                product_id: productId,
+                warehouse_id: toWarehouseId,
+                type: 'transfer_in',
+                quantity: quantity,
+                user_id: user.id,
+                notes: `Terima transfer dari gudang asal`
+            }
+        ]).select();
 
-    if (logError) console.error("Failed to log transfer:", logError.message);
+    // Legacy Support (If table exists)
+    await supabase.from("stock_transfers").insert({
+        product_id: productId,
+        from_warehouse_id: fromWarehouseId,
+        to_warehouse_id: toWarehouseId,
+        quantity: quantity,
+        user_id: user.id
+    });
 
     revalidatePath("/dashboard/inventory");
     return { success: true };
@@ -220,7 +253,7 @@ export async function recordStockOpname(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { error } = await supabase.from("stock_opnames").insert({
+    const { data: opnameRecord, error } = await supabase.from("stock_opnames").insert({
         warehouse_id,
         product_id,
         system_stock,
@@ -228,9 +261,39 @@ export async function recordStockOpname(formData: FormData) {
         difference,
         user_id: user.id,
         notes
-    });
+    }).select().single();
 
     if (error) throw new Error(error.message);
+
+    // Audit Log: Penyesuaian Stok (Adjustment)
+    if (difference !== 0) {
+        await supabase.from("stock_movements").insert({
+            product_id,
+            warehouse_id,
+            type: 'adjustment',
+            quantity: Math.abs(difference),
+            reference_id: opnameRecord.id,
+            user_id: user.id,
+            notes: `Penyesuaian stok opname: ${difference > 0 ? 'Surplus' : 'Defisit'}`
+        });
+    }
+
     revalidatePath("/dashboard/inventory");
     return { success: true };
+}
+
+export async function getStockMovements() {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from("stock_movements")
+        .select(`
+            *,
+            product:products(name, sku),
+            warehouse:warehouses(name),
+            user:profiles(full_name)
+        `)
+        .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data;
 }

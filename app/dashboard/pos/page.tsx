@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { checkout } from "@/app/dashboard/pos/actions";
+import { checkout, searchProducts } from "@/app/dashboard/pos/actions";
 import { getCustomers } from "../master/customers/actions";
 import { Loader2, Search, ShoppingCart, Trash2, Plus, Minus, Package, User } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableDropdown } from "@/components/ui/searchable-dropdown";
+import { useDebounce } from "use-debounce";
 
 type Product = {
     id: string;
@@ -31,40 +32,31 @@ export default function POSPage() {
     const [selectedCustomer, setSelectedCustomer] = useState<string>("");
     const [cart, setCart] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
-    // Derived state for filtered products
-    const filteredProducts = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
 
     const supabase = createClient();
 
+    // Fetch Customers once
     useEffect(() => {
-        async function fetchInitialData() {
-            try {
-                const [productsData, customersData] = await Promise.all([
-                    supabase
-                        .from("products")
-                        .select("id, name, sku, sell_price, image_url")
-                        .order('name')
-                        .then(({ data, error }) => { if (error) throw error; return data; }),
-                    getCustomers()
-                ]);
-
-                if (productsData) setProducts(productsData);
-                if (customersData) setCustomers(customersData);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                toast.error("Failed to load POS data");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchInitialData();
+        getCustomers().then(data => {
+            if (data) setCustomers(data);
+            setLoading(false);
+        });
     }, []);
+
+    // Fetch Products when debounced search term changes
+    useEffect(() => {
+        async function fetchProducts() {
+            setSearching(true);
+            const data = await searchProducts(debouncedSearchTerm);
+            setProducts(data);
+            setSearching(false);
+        }
+        fetchProducts();
+    }, [debouncedSearchTerm]);
 
     const addToCart = (product: Product) => {
         setCart((prev) => {
@@ -152,7 +144,12 @@ export default function POSPage() {
 
                 {/* Product Grid */}
                 <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                    {filteredProducts.length === 0 ? (
+                    {searching ? (
+                        <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4">
+                            <Loader2 className="animate-spin w-8 h-8 text-indigo-600" />
+                            <p>Searching products...</p>
+                        </div>
+                    ) : products.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3 min-h-[300px]">
                             <Package className="w-12 h-12 opacity-20" />
                             <p>No products found matching "{searchTerm}"</p>
@@ -165,7 +162,7 @@ export default function POSPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {filteredProducts.map((product) => (
+                            {products.map((product: Product) => (
                                 <button
                                     key={product.id}
                                     onClick={() => addToCart(product)}

@@ -27,7 +27,7 @@ export const NAVIGATION_LINKS: NavigationItem[] = [
         roles: ["superadmin", "gudang"],
         subItems: [
             { label: "Stock Amount", href: "/dashboard/inventory?tab=total_stock", tab: "total_stock" },
-            { label: "Stock History", href: "/dashboard/inventory?tab=overview", tab: "overview" },
+            { label: "Stock History", href: "/dashboard/inventory/history", tab: "history" },
             { label: "Incoming Stock", href: "/dashboard/inventory?tab=stock_in", tab: "stock_in" },
             { label: "Stock Transfer", href: "/dashboard/inventory?tab=transfer", tab: "transfer" },
         ]

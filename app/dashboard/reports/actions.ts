@@ -19,35 +19,18 @@ export async function getDailySalesStats(startDate: string, endDate: string) {
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
 
-    const { data: transactions, error } = await supabase
-        .from("transactions")
-        .select("created_at, total_amount")
-        .eq("status", "completed")
-        .gte("created_at", startDate)
-        .lte("created_at", end.toISOString())
-        .order("created_at", { ascending: true });
+    const { data: stats, error } = await supabase.rpc('get_daily_sales_stats_sql', {
+        p_start_date: startDate,
+        p_end_date: end.toISOString()
+    });
 
     if (error) throw new Error(error.message);
 
-    // Group by date
-    const dailyMap = new Map<string, { total: number; count: number }>();
-
-    transactions.forEach((t) => {
-        const dateKey = new Date(t.created_at).toLocaleDateString("en-CA"); // YYYY-MM-DD
-        const current = dailyMap.get(dateKey) || { total: 0, count: 0 };
-        dailyMap.set(dateKey, {
-            total: current.total + t.total_amount,
-            count: current.count + 1,
-        });
-    });
-
-    return Array.from(dailyMap.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, stat]) => ({
-            date,
-            total_sales: stat.total,
-            transaction_count: stat.count,
-        }));
+    return (stats as any[]).map(s => ({
+        date: s.date,
+        total_sales: s.total_sales,
+        transaction_count: parseInt(s.transaction_count)
+    }));
 }
 
 export async function getTopProducts(startDate: string, endDate: string) {
@@ -55,40 +38,19 @@ export async function getTopProducts(startDate: string, endDate: string) {
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
 
-    const { data: items, error } = await supabase
-        .from("transaction_items")
-        .select(`
-            quantity,
-            sell_price,
-            products (name)
-        `)
-        .gte("created_at", startDate)
-        .lte("created_at", end.toISOString());
+    const { data: stats, error } = await supabase.rpc('get_top_products_stats_sql', {
+        p_start_date: startDate,
+        p_end_date: end.toISOString(),
+        p_limit: 5
+    });
 
     if (error) throw new Error(error.message);
 
-    const productMap = new Map<string, { quantity: number; revenue: number }>();
-
-    items.forEach((item) => {
-        const product = item.products as any;
-        const name = product?.name || "Unknown";
-        const current = productMap.get(name) || { quantity: 0, revenue: 0 };
-
-        productMap.set(name, {
-            quantity: current.quantity + item.quantity,
-            revenue: current.revenue + (item.quantity * item.sell_price),
-        });
-    });
-
-    // Sort by quantity desc and take top 5
-    return Array.from(productMap.entries())
-        .map(([name, stat]) => ({
-            name,
-            quantity: stat.quantity,
-            revenue: stat.revenue,
-        }))
-        .sort((a, b) => b.quantity - a.quantity)
-        .slice(0, 5);
+    return (stats as any[]).map(s => ({
+        name: s.name,
+        quantity: parseInt(s.quantity),
+        revenue: s.revenue
+    }));
 }
 
 export type SalesReportItem = {

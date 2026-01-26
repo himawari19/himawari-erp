@@ -18,30 +18,25 @@ export default async function DashboardPage() {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    // Fetch Transactions for Today
-    // Note: In production we should respect timezone, for now assuming UTC or server time simple approximation
-    const { data: todayTransactions } = await supabase
-        .from('transactions')
-        .select(`
-            id, 
-            total_amount, 
-            created_at,
-            transaction_items (
-                buy_price_total
-            )
-        `)
-        .gte('created_at', todayStart.toISOString())
-        .lte('created_at', todayEnd.toISOString());
+    // URL for get_dashboard_summary params
+    const summaryParams = {
+        p_start_date: todayStart.toISOString(),
+        p_end_date: todayEnd.toISOString(),
+        p_warehouse_id: profile?.warehouse_id || null
+    };
 
-    // Calculate Stats
-    const totalTransactions = todayTransactions?.length || 0;
-    const totalRevenue = todayTransactions?.reduce((sum: number, t: any) => sum + t.total_amount, 0) || 0;
+    // Fetch Aggragated Stats from Database RPC
+    const { data: summaryData, error: summaryError } = await (supabase
+        .rpc('get_dashboard_summary', summaryParams)
+        .single() as any);
 
-    // Calculate Profit: Revenue - COGS (Sum of buy_price_total)
-    const totalCost = todayTransactions?.reduce((sum: number, t: any) => {
-        const txCost = t.transaction_items.reduce((itemSum: number, item: any) => itemSum + item.buy_price_total, 0);
-        return sum + txCost;
-    }, 0) || 0;
+    if (summaryError) {
+        console.error("Error fetching dashboard summary:", summaryError);
+    }
+
+    const totalTransactions = Number(summaryData?.transaction_count || 0);
+    const totalRevenue = Number(summaryData?.revenue || 0);
+    const totalCost = Number(summaryData?.cost || 0);
     const totalProfit = totalRevenue - totalCost;
 
     // Fetch Recent 5 Transactions (All time)
