@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { DateRangePicker } from "./date-range-picker";
 import { SalesReportItem, IncomingStockItem, MutationItem, DailySalesStat, TopProductStat } from "./actions";
-import { FileText, Truck, ArrowLeftRight, TrendingUp, Package, AlertCircle } from "lucide-react";
+import { FileText, Truck, ArrowLeftRight, TrendingUp, Download, Table, FilePieChart } from "lucide-react";
 import { ChartsView } from "./charts-view";
+import { exportToExcel, exportToPDF } from "@/lib/export-utils";
+import { format } from "date-fns";
 
 interface ReportsViewProps {
     sales: SalesReportItem[];
@@ -20,6 +22,96 @@ interface ReportsViewProps {
 export function ReportsView({ sales, incoming, mutations, dailyStats, topProducts, startDate, endDate, onDateChange }: ReportsViewProps) {
     const [activeTab, setActiveTab] = useState<"sales" | "incoming" | "mutations">("sales");
 
+    const handleExport = (formatType: 'pdf' | 'excel') => {
+        if (activeTab === 'sales') {
+            const columns = ["Tanggal", "ID Transaksi", "Pelanggan", "Item", "Total"];
+            const rows = sales.map(s => [
+                format(new Date(s.created_at), 'dd/MM/yyyy HH:mm'),
+                s.transaction_id.slice(0, 8),
+                s.customer_name || "Guest",
+                s.items_count,
+                `Rp ${s.total_amount.toLocaleString('id-ID')}`
+            ]);
+
+            if (formatType === 'pdf') {
+                exportToPDF({
+                    title: "Laporan Penjualan",
+                    filename: "Laporan_Penjualan",
+                    columns,
+                    rows,
+                    startDate,
+                    endDate
+                });
+            } else {
+                exportToExcel(sales.map(s => ({
+                    Tanggal: format(new Date(s.created_at), 'yyyy-MM-dd HH:mm'),
+                    ID_Transaksi: s.transaction_id,
+                    Pelanggan: s.customer_name || "Guest",
+                    Jumlah_Item: s.items_count,
+                    Total_Penjualan: s.total_amount
+                })), "Laporan_Penjualan");
+            }
+        } else if (activeTab === 'incoming') {
+            const columns = ["Tanggal", "Produk", "SKU", "Gudang", "Qty", "Harga Beli"];
+            const rows = incoming.map(i => [
+                format(new Date(i.received_at), 'dd/MM/yyyy'),
+                i.product_name,
+                i.sku,
+                i.warehouse_name,
+                `+${i.quantity}`,
+                `Rp ${i.buy_price.toLocaleString('id-ID')}`
+            ]);
+
+            if (formatType === 'pdf') {
+                exportToPDF({
+                    title: "Laporan Stok Masuk",
+                    filename: "Laporan_Stok_Masuk",
+                    columns,
+                    rows,
+                    startDate,
+                    endDate
+                });
+            } else {
+                exportToExcel(incoming.map(i => ({
+                    Tanggal: format(new Date(i.received_at), 'yyyy-MM-dd'),
+                    Produk: i.product_name,
+                    SKU: i.sku,
+                    Gudang: i.warehouse_name,
+                    Qty: i.quantity,
+                    Harga_Beli: i.buy_price
+                })), "Laporan_Stok_Masuk");
+            }
+        } else if (activeTab === 'mutations') {
+            const columns = ["Tanggal", "Tipe", "Produk", "Deskripsi", "Perubahan"];
+            const rows = mutations.map(m => [
+                format(new Date(m.date), 'dd/MM/yyyy HH:mm'),
+                m.type,
+                m.product_name,
+                m.description,
+                m.quantity_change > 0 ? `+${m.quantity_change}` : m.quantity_change
+            ]);
+
+            if (formatType === 'pdf') {
+                exportToPDF({
+                    title: "Laporan Mutasi Stok",
+                    filename: "Laporan_Mutasi_Stok",
+                    columns,
+                    rows,
+                    startDate,
+                    endDate
+                });
+            } else {
+                exportToExcel(mutations.map(m => ({
+                    Tanggal: format(new Date(m.date), 'yyyy-MM-dd HH:mm'),
+                    Tipe: m.type,
+                    Produk: m.product_name,
+                    Deskripsi: m.description,
+                    Perubahan: m.quantity_change
+                })), "Laporan_Mutasi_Stok");
+            }
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header & Filter */}
@@ -28,8 +120,27 @@ export function ReportsView({ sales, incoming, mutations, dailyStats, topProduct
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">Reports Center</h1>
                     <p className="text-sm text-gray-500 mt-1">Analyze business performance and stock movements.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <DateRangePicker startDate={startDate} endDate={endDate} onRangeChange={onDateChange} />
+
+                    <div className="flex items-center bg-white border rounded-lg shadow-sm overflow-hidden divide-x">
+                        <button
+                            onClick={() => handleExport('pdf')}
+                            className="p-2.5 hover:bg-gray-50 text-gray-600 transition-colors flex items-center gap-2"
+                            title="Export PDF"
+                        >
+                            <FilePieChart className="w-4 h-4 text-rose-500" />
+                            <span className="text-xs font-bold hidden md:inline">PDF</span>
+                        </button>
+                        <button
+                            onClick={() => handleExport('excel')}
+                            className="p-2.5 hover:bg-gray-50 text-gray-600 transition-colors flex items-center gap-2"
+                            title="Export Excel"
+                        >
+                            <Table className="w-4 h-4 text-emerald-500" />
+                            <span className="text-xs font-bold hidden md:inline">EXCEL</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
